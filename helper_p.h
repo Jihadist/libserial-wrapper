@@ -1,5 +1,7 @@
 #pragma once
 #include "libserialport.h"
+
+#define __PRETTY_FUNCTION__ __FUNCSIG__
 class helper {
 public:
     helper() = delete;

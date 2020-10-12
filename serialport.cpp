@@ -17,30 +17,48 @@ SerialPort::BaudRate convertBaudRate(int baudrate);
 SerialPort::SerialPort(QObject* parent)
     : QIODevice(parent)
 {
+    qDebug(__PRETTY_FUNCTION__);
 }
 
 SerialPort::SerialPort(const QString& name, QObject* parent)
     : QIODevice(parent)
 {
-    setPortName(name);
+    qDebug(__PRETTY_FUNCTION__);
+    if (setPortName(name))
+        qDebug("Port setup");
 }
 
 SerialPort::SerialPort(const SerialPortInfo& info, QObject* parent)
     : QIODevice(parent)
 {
+    qDebug(__PRETTY_FUNCTION__);
     setPortName(info.portName());
+}
+SerialPort::~SerialPort()
+{
+    qDebug(__PRETTY_FUNCTION__);
+    Q_D(const SerialPort);
+    if (isOpen())
+        close();
+    sp_free_port(d->port);
 }
 
 bool SerialPort::open(QIODevice::OpenMode mode)
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(const SerialPort);
     sp_return error;
+
     error = sp_open(d->port, convertMode(mode));
-    return helper::check(error);
+    setOpenMode(mode);
+    return !helper::check(error) && QIODevice::open(mode);
 }
 
 void SerialPort::close()
 {
+
+    qDebug(__PRETTY_FUNCTION__);
+    emit aboutToClose();
     Q_D(const SerialPort);
     sp_return error;
     error = sp_close(d->port);
@@ -49,19 +67,22 @@ void SerialPort::close()
 
 qint64 SerialPort::pos() const
 {
+    qDebug(__PRETTY_FUNCTION__);
     // Sequential devices doesn't provide this func
     return 0;
 }
 
 qint64 SerialPort::size() const
 {
+    qDebug(__PRETTY_FUNCTION__);
     // return buffer.size() + QIODevice::bytesAvailable();
     return QIODevice::bytesAvailable();
 }
 
 bool SerialPort::atEnd() const
 {
-    return !bytesAvailable();
+    qDebug(__PRETTY_FUNCTION__);
+    return QIODevice::atEnd();
 }
 /*!
     \reimp
@@ -72,6 +93,7 @@ bool SerialPort::atEnd() const
 */
 qint64 SerialPort::bytesAvailable() const
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(const SerialPort);
     sp_return error;
     error = sp_input_waiting(d->port);
@@ -82,6 +104,7 @@ qint64 SerialPort::bytesAvailable() const
 
 qint64 SerialPort::bytesToWrite() const
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(const SerialPort);
     sp_return error;
     error = sp_output_waiting(d->port);
@@ -92,12 +115,14 @@ qint64 SerialPort::bytesToWrite() const
 
 bool SerialPort::waitForReadyRead(int msecs)
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(SerialPort);
     return d->waitForReadyRead(msecs);
 }
 
 bool SerialPort::waitForBytesWritten(int msecs)
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(const SerialPort);
     Q_UNUSED(msecs)
     sp_return error;
@@ -112,54 +137,63 @@ bool SerialPort::waitForBytesWritten(int msecs)
 */
 bool SerialPort::isSequential() const
 {
+    qDebug(__PRETTY_FUNCTION__);
     return true;
 }
 
-QByteArray SerialPort::read(qint64 maxlen)
-{
-    int result_len;
-    QScopedArrayPointer<char> buffer(new char[SERIALPORT_BUFFERSIZE]);
-    result_len = readData(buffer.get(), maxlen);
-    qDebug() << result_len;
-    char* bytebuf = new char[result_len];
-    memcpy(bytebuf, buffer.get(), result_len);
-    return QByteArray::fromRawData(bytebuf, result_len);
-}
+//QByteArray SerialPort::read(qint64 maxlen)
+//{
 
-qint64 SerialPort::write(const char* data, qint64 len)
-{
-    Q_D(const SerialPort);
-    sp_return error;
-    QDebug dbg = qDebug();
-    for (int i = 0; i < len; ++i) {
-        dbg << QString::number(data[i], 16);
-    }
-    error = sp_blocking_write(d->port, data, len, m_timeout);
-    return helper::check(error);
-}
+//    qDebug(__PRETTY_FUNCTION__);
 
-qint64 SerialPort::write(const char* data)
-{
-    size_t len = strlen(data);
-    return write(data, len);
-}
+//    return QIODevice::read(maxlen);
+//}
+
+//    int result_len;
+//    QScopedArrayPointer<char> buffer(new char[SERIALPORT_BUFFERSIZE]);
+//    result_len = readData(buffer.get(), maxlen);
+//    qDebug() << result_len;
+//    char* bytebuf = new char[result_len];
+//    memcpy(bytebuf, buffer.get(), result_len);
+//    return QByteArray::fromRawData(bytebuf, result_len);
+
+//qint64 SerialPort::write(const char* data, qint64 len)
+//{
+//    Q_D(const SerialPort);
+//    sp_return error;
+//    QDebug dbg = qDebug();
+//    for (int i = 0; i < len; ++i) {
+//        dbg << QString::number(data[i], 16);
+//    }
+//    error = sp_blocking_write(d->port, data, len, m_timeout);
+//    return helper::check(error);
+//}
+
+//qint64 SerialPort::write(const char* data)
+//{
+//    size_t len = strlen(data);
+//    return write(data, len);
+//}
 
 QString SerialPort::portName() const
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(const SerialPort);
     return sp_get_port_name(d->port);
 }
 
 bool SerialPort::setPortName(const QString& name)
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(SerialPort);
     sp_return error;
     error = sp_get_port_by_name(name.toStdString().c_str(), &d->port);
-    return helper::check(error);
+    return !helper::check(error);
 }
 
 qint64 SerialPort::readData(char* data, qint64 maxlen)
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(const SerialPort);
     sp_return error;
     error = sp_blocking_read(d->port, data, maxlen, m_timeout);
@@ -170,6 +204,7 @@ qint64 SerialPort::readData(char* data, qint64 maxlen)
 
 qint64 SerialPort::writeData(const char* data, qint64 len)
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(const SerialPort);
     sp_return error;
     error = sp_blocking_write(d->port, data, len, m_timeout);
@@ -178,14 +213,21 @@ qint64 SerialPort::writeData(const char* data, qint64 len)
     return result;
 }
 
+bool SerialPort::canReadLine() const
+{
+    return false;
+}
+
 SerialPort::FlowControl SerialPort::flowControl() const
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(const SerialPort);
     return d->flowControl;
 }
 
 bool SerialPort::setFlowControl(const FlowControl& flowControl)
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(SerialPort);
     if (isOpen())
         if (d->flowControl != flowControl) {
@@ -201,12 +243,14 @@ bool SerialPort::setFlowControl(const FlowControl& flowControl)
 
 SerialPort::StopBits SerialPort::stopBits() const
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(const SerialPort);
     return d->stopBits;
 }
 
 bool SerialPort::setStopBits(const StopBits& stopBits)
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(SerialPort);
     if (isOpen())
         if (d->stopBits != stopBits) {
@@ -222,12 +266,14 @@ bool SerialPort::setStopBits(const StopBits& stopBits)
 
 SerialPort::Parity SerialPort::parity() const
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(const SerialPort);
     return d->parity;
 }
 
 bool SerialPort::setParity(const Parity& parity)
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(SerialPort);
     if (isOpen())
         if (d->parity != parity) {
@@ -243,12 +289,14 @@ bool SerialPort::setParity(const Parity& parity)
 
 SerialPort::DataBits SerialPort::dataBits() const
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(const SerialPort);
     return d->dataBits;
 }
 
 bool SerialPort::setDataBits(const DataBits& dataBits)
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(SerialPort);
     if (isOpen())
         if (d->dataBits != dataBits) {
@@ -264,12 +312,14 @@ bool SerialPort::setDataBits(const DataBits& dataBits)
 
 int SerialPort::baudRate() const
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(const SerialPort);
     return d->baudRate;
 }
 
 bool SerialPort::setBaudRate(const int& baudRate)
 {
+    qDebug(__PRETTY_FUNCTION__);
     Q_D(SerialPort);
     if (isOpen())
         if (d->baudRate != baudRate) {
@@ -285,6 +335,7 @@ bool SerialPort::setBaudRate(const int& baudRate)
 
 QIODevice::OpenMode convertMode(sp_mode mode)
 {
+    qDebug(__PRETTY_FUNCTION__);
     switch (mode) {
     case SP_MODE_READ:
         return QIODevice::ReadOnly;
@@ -299,6 +350,7 @@ QIODevice::OpenMode convertMode(sp_mode mode)
 
 sp_mode convertMode(QIODevice::OpenMode mode)
 {
+    qDebug(__PRETTY_FUNCTION__);
     switch (mode) {
     case QIODevice::ReadOnly:
         return SP_MODE_READ;
@@ -313,6 +365,7 @@ sp_mode convertMode(QIODevice::OpenMode mode)
 
 SerialPort::Parity convertParity(sp_parity parity)
 {
+    qDebug(__PRETTY_FUNCTION__);
     switch (parity) {
     case SP_PARITY_NONE:
         return SerialPort::Parity::NoParity;
@@ -333,6 +386,7 @@ SerialPort::Parity convertParity(sp_parity parity)
 
 sp_parity convertParity(SerialPort::Parity parity)
 {
+    qDebug(__PRETTY_FUNCTION__);
     switch (parity) {
     case SerialPort::Parity::NoParity:
         return SP_PARITY_NONE;
@@ -353,6 +407,7 @@ sp_parity convertParity(SerialPort::Parity parity)
 
 SerialPort::FlowControl convertFlowControl(sp_flowcontrol flow)
 {
+    qDebug(__PRETTY_FUNCTION__);
     switch (flow) {
     case SP_FLOWCONTROL_NONE:
         return SerialPort::FlowControl::NoFlowControl;
@@ -369,6 +424,7 @@ SerialPort::FlowControl convertFlowControl(sp_flowcontrol flow)
 
 sp_flowcontrol convertFlowControl(SerialPort::FlowControl flow)
 {
+    qDebug(__PRETTY_FUNCTION__);
     switch (flow) {
     case SerialPort::FlowControl::NoFlowControl:
         return SP_FLOWCONTROL_NONE;
@@ -385,6 +441,7 @@ sp_flowcontrol convertFlowControl(SerialPort::FlowControl flow)
 
 SerialPort::StopBits convertStopBits(int stopbits)
 {
+    qDebug(__PRETTY_FUNCTION__);
     switch (stopbits) {
     case 1:
         return SerialPort::OneStop;
@@ -399,6 +456,7 @@ SerialPort::StopBits convertStopBits(int stopbits)
 
 SerialPort::BaudRate convertBaudRate(int baudrate)
 {
+    qDebug(__PRETTY_FUNCTION__);
     switch (baudrate) {
     case 1200:
         return SerialPort::Baud1200;
@@ -423,6 +481,8 @@ SerialPort::BaudRate convertBaudRate(int baudrate)
 
 bool SerialPortPrivate::waitForReadyRead(int msecs)
 {
+    //Q_Q(SerialPort);
+    qDebug(__PRETTY_FUNCTION__);
     sp_return error;
     struct sp_event_set* event_set;
 
@@ -437,11 +497,13 @@ bool SerialPortPrivate::waitForReadyRead(int msecs)
     sp_free_event_set(event_set);
 
     error = sp_input_waiting(port);
+    //emit q->readyRead();
     return !helper::check(error);
 }
 
 bool SerialPortPrivate::waitForBytesWritten(int msecs)
 {
+    qDebug(__PRETTY_FUNCTION__);
     sp_return error;
     struct sp_event_set* event_set;
 

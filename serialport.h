@@ -11,7 +11,7 @@ public:
     explicit SerialPort(QObject* parent = nullptr);
     explicit SerialPort(const QString& name, QObject* parent = nullptr);
     explicit SerialPort(const SerialPortInfo& info, QObject* parent = nullptr);
-    //~SerialPort();
+    ~SerialPort();
 
     enum BaudRate {
         Baud1200 = 1200,
@@ -82,16 +82,16 @@ public:
     qint64 bytesToWrite() const override;
     bool waitForReadyRead(int msecs = 0) override;
     bool waitForBytesWritten(int msecs = 0) override;
-    bool isSequential() const override;
+    inline bool isSequential() const override;
 
-    QByteArray read(qint64 maxlen);
+    //QByteArray read(qint64 maxlen);
 
-    qint64 write(const char* data, qint64 len);
-    qint64 write(const char* data);
-    inline qint64 write(const QByteArray& data)
-    {
-        return write(data.constData(), data.size());
-    }
+    //    qint64 write(const char* data, qint64 len);
+    //    qint64 write(const char* data);
+    //    inline qint64 write(const QByteArray& data)
+    //    {
+    //        return write(data.constData(), data.size());
+    //    }
 
     QString portName() const;
     bool setPortName(const QString& name);
@@ -124,14 +124,18 @@ protected:
 
 private:
     uint m_timeout = 1000;
-    QByteArray m_readChunkBuffer;
-    QByteArray m_writeChunkBuffer;
-    bool m_communicationStarted = false;
-    bool m_writeStarted = false;
-    bool m_readStarted = false;
-    qint64 m_writeBytesTransferred = 0;
-    qint64 m_readBytesTransferred = 0;
+    //    QByteArray m_readChunkBuffer;
+    //    QByteArray m_writeChunkBuffer;
+    //    bool m_communicationStarted = false;
+    //    bool m_writeStarted = false;
+    //    bool m_readStarted = false;
+    //    qint64 m_writeBytesTransferred = 0;
+    //    qint64 m_readBytesTransferred = 0;
 
     Q_DISABLE_COPY(SerialPort)
     // QIODevice interface
+
+    // QIODevice interface
+public:
+    bool canReadLine() const override;
 };
