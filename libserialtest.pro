@@ -51,3 +51,5 @@ HEADERS += \
     serialport_p.h \
     serialportinfo.h \
     serialportinfo_p.h
+
+unix: LIBS += -lserialport
