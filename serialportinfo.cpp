@@ -5,9 +5,7 @@
 #include "serialportinfo_p.h"
 #include <QDebug>
 #include <QList>
-SerialPortInfo::SerialPortInfo()
-{
-}
+SerialPortInfo::SerialPortInfo() { }
 
 SerialPortInfo::SerialPortInfo(const SerialPort& port)
     : SerialPortInfo(port.portName())
@@ -30,9 +28,7 @@ SerialPortInfo::SerialPortInfo(const SerialPortInfo& other)
 {
 }
 
-SerialPortInfo::~SerialPortInfo()
-{
-}
+SerialPortInfo::~SerialPortInfo() { }
 
 SerialPortInfo& SerialPortInfo::operator=(const SerialPortInfo& other)
 {
@@ -40,12 +36,9 @@ SerialPortInfo& SerialPortInfo::operator=(const SerialPortInfo& other)
     return *this;
 }
 
-void SerialPortInfo::swap(SerialPortInfo& other)
-{
-    d_ptr.swap(other.d_ptr);
-}
+void SerialPortInfo::swap(SerialPortInfo& other) { d_ptr.swap(other.d_ptr); }
 
-//QList<qint32> SerialPortInfo::standardBaudRates()
+// QList<qint32> SerialPortInfo::standardBaudRates()
 //{
 //}
 
@@ -54,7 +47,7 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
     sp_port** port_list;
     sp_return error;
     /* Call sp_list_ports() to get the ports. The port_list
-     * pointer will be updated to refer to the array created. */
+   * pointer will be updated to refer to the array created. */
     error = sp_list_ports(&port_list);
     helper::check(error);
 
@@ -66,15 +59,18 @@ QList<SerialPortInfo> SerialPortInfo::availablePorts()
 
         if (transport == SP_TRANSPORT_NATIVE) {
             /* This is a "native" port, usually directly connected
-                 * to the system rather than some external interface. */
+       * to the system rather than some external interface. */
+            priv.portName = sp_get_port_name(port);
         } else if (transport == SP_TRANSPORT_USB) {
             /* This is a USB to serial converter of some kind. */
             priv.portName = sp_get_port_name(port);
-            //priv.device = QSerialPortInfoPrivate::portNameToSystemLocation(portName);
+            // priv.device =
+            // QSerialPortInfoPrivate::portNameToSystemLocation(portName);
             priv.description = sp_get_port_description(port);
             priv.manufacturer = sp_get_port_usb_manufacturer(port);
 
-            //const QString instanceIdentifier = deviceInstanceIdentifier(deviceInfoData.DevInst);
+            // const QString instanceIdentifier =
+            // deviceInstanceIdentifier(deviceInfoData.DevInst);
 
             priv.serialNumber = sp_get_port_usb_serial(port);
             int usb_vid, usb_pid;
@@ -147,6 +143,7 @@ SerialPortInfo::SerialPortInfo(const SerialPortInfoPrivate& dd)
 
 QDebug operator<<(QDebug dbg, const SerialPortInfo& info)
 {
-    dbg << info.description() << info.portName() << info.productIdentifier() << info.vendorIdentifier();
+    dbg << info.description() << info.portName() << info.productIdentifier()
+        << info.vendorIdentifier();
     return dbg.maybeSpace();
 }
